@@ -2,10 +2,11 @@
 
 namespace Jeoip\Client;
 
+use Jeoip\Contracts\IGeoIPService;
 use Symfony\Component\HttpClient\HttpClient;
 use Symfony\Contracts\HttpClient\HttpClientInterface;
 
-class API
+class API implements IGeoIPService
 {
     public HttpClientInterface $client;
     public string $endPoint;

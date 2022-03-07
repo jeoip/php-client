@@ -2,10 +2,17 @@
 
 namespace Jeoip\Client;
 
-use Exception;
+use Error;
+use Jeoip\Common\Cidr;
+use Jeoip\Common\Exceptions\Exception;
+use Jeoip\Common\Location as CommonLocation;
+use Jeoip\Contracts\ICidr;
 use Symfony\Contracts\HttpClient\ResponseInterface;
 
-class Location
+/**
+ * @phpstan-type ExtraDataType array<string,mixed>
+ */
+class Location extends CommonLocation
 {
     public static function fromResponse(ResponseInterface $response): self
     {
@@ -35,44 +42,69 @@ class Location
         if (!isset($data['query']) or !is_string($data['query'])) {
             throw new Exception("'query' is not valid");
         }
+        $subnet = Cidr::parse($data['subnet']);
+        $countryCode = $data['countryCode'];
+        unset($data['countryCode'], $data['subnet'], $data['status']);
 
-        return new self($data['country'], $data['countryCode'], $data['subnet'], $data['query']);
+        /*
+         * @var ExtraDataType $data
+         */
+        return new self($countryCode, $subnet, $data);
     }
 
-    protected string $country;
-    protected string $countryCode;
-    protected string $subnet;
-    protected string $query;
+    /**
+     * @var ExtraDataType
+     */
+    protected array $extraData;
 
-    public function __construct(
-        string $country,
-        string $countryCode,
-        string $subnet,
-        string $query
-    ) {
-        $this->country = $country;
-        $this->countryCode = $countryCode;
-        $this->subnet = $subnet;
-        $this->query = $query;
-    }
-
-    public function getCountry(): string
+    /**
+     * @param ExtraDataType $extraData
+     */
+    public function __construct(string $countryCode, ICidr $subnet, array $extraData = [])
     {
-        return $this->country;
+        parent::__construct($countryCode, $subnet);
+        $this->extraData = $extraData;
     }
 
-    public function getCountryCode(): string
+    /**
+     * @param array<int,mixed> $arguments
+     *
+     * @return mixed
+     */
+    public function __call(string $name, array $arguments)
     {
-        return $this->countryCode;
+        if ('get' != substr($name, 0, 3)) {
+            throw new Error('Call to undefined method '.__CLASS__."::{$name}()");
+        }
+        $name = lcfirst(substr($name, 3));
+
+        return $this->getData($name);
     }
 
-    public function getSubnet(): string
+    /**
+     * @return mixed
+     */
+    public function getData(string $name)
     {
-        return $this->subnet;
+        if (!isset($this->extraData[$name])) {
+            throw new Exception("There is no '{$name}' data");
+        }
+
+        return $this->extraData[$name];
     }
 
-    public function getQuery(): string
+    public function hasData(string $name): bool
     {
-        return $this->query;
+        $name = lcfirst($name);
+
+        return isset($this->extraData[$name]);
+    }
+
+    /**
+     * @return ExtraDataType
+     */
+    public function getExtraData(): array
+    {
+        return $this->extraData;
     }
 }
