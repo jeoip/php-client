@@ -5,6 +5,7 @@ namespace Jeoip\Client;
 use Error;
 use Jeoip\Common\Cidr;
 use Jeoip\Common\Exceptions\Exception;
+use Jeoip\Common\Exceptions\UnknownLocationException;
 use Jeoip\Common\Location as CommonLocation;
 use Jeoip\Contracts\ICidr;
 use Symfony\Contracts\HttpClient\ResponseInterface;
@@ -26,6 +27,9 @@ class Location extends CommonLocation
         }
         if (!$data['status']) {
             if (isset($data['message']) and is_string($data['message'])) {
+                if ($data['message'] === "Cannot find location for this query") {
+                    throw new UnknownLocationException($data['query'], $data['message']);
+                }
                 throw new Exception($data['message']);
             }
             throw new Exception('status is not true');
