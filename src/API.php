@@ -19,9 +19,9 @@ class API implements IGeoIPService
         ]);
     }
 
-    public function query(string $ip): Location
+    public function query(?string $ip = null): Location
     {
-        $response = $this->client->request('GET', '/api/'.$ip);
+        $response = $this->client->request('GET', '/api/'.($ip ?? 'json'));
 
         return Location::fromResponse($response);
     }

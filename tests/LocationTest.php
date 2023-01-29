@@ -2,7 +2,6 @@
 
 namespace Jeoip\Client\Tests;
 
-use Error;
 use Jeoip\Client\Location;
 use Jeoip\Common\Cidr;
 use Jeoip\Common\Exceptions\Exception;
@@ -14,6 +13,7 @@ class LocationTest extends TestCase
     {
         $location = $this->getLocation();
 
+        $this->assertEquals('1.0.0.1', $location->getQuery());
         $this->assertEquals('XX', $location->getCountryCode());
         $this->assertEquals('1.0.0.0/24', $location->getSubnet()->__toString());
         $this->assertEquals('Name', $location->getCountryName()); // @phpstan-ignore-line
@@ -24,7 +24,7 @@ class LocationTest extends TestCase
 
     public function testCallUndefinedMethod(): void
     {
-        $this->expectException(Error::class);
+        $this->expectException(\Error::class);
         $this->getLocation()->hello(); // @phpstan-ignore-line
     }
 
@@ -36,7 +36,7 @@ class LocationTest extends TestCase
 
     protected function getLocation(): Location
     {
-        return new Location('XX', Cidr::parse('1.0.0.0/24'), [
+        return new Location('1.0.0.1', 'XX', Cidr::parse('1.0.0.0/24'), [
             'countryName' => 'Name',
             'city' => 'City Name',
         ]);

@@ -2,7 +2,6 @@
 
 namespace Jeoip\Client;
 
-use Error;
 use Jeoip\Common\Cidr;
 use Jeoip\Common\Exceptions\Exception;
 use Jeoip\Common\Exceptions\UnknownLocationException;
@@ -27,7 +26,7 @@ class Location extends CommonLocation
         }
         if (!$data['status']) {
             if (isset($data['message']) and is_string($data['message'])) {
-                if ($data['message'] === "Cannot find location for this query") {
+                if ('Cannot find location for this query' === $data['message']) {
                     throw new UnknownLocationException($data['query'], $data['message']);
                 }
                 throw new Exception($data['message']);
@@ -53,7 +52,7 @@ class Location extends CommonLocation
         /*
          * @var ExtraDataType $data
          */
-        return new self($countryCode, $subnet, $data);
+        return new self($data['query'], $countryCode, $subnet, $data);
     }
 
     /**
@@ -64,9 +63,9 @@ class Location extends CommonLocation
     /**
      * @param ExtraDataType $extraData
      */
-    public function __construct(string $countryCode, ICidr $subnet, array $extraData = [])
+    public function __construct(string $query, string $countryCode, ICidr $subnet, array $extraData = [])
     {
-        parent::__construct($countryCode, $subnet);
+        parent::__construct($query, $countryCode, $subnet);
         $this->extraData = $extraData;
     }
 
@@ -78,7 +77,7 @@ class Location extends CommonLocation
     public function __call(string $name, array $arguments)
     {
         if ('get' != substr($name, 0, 3)) {
-            throw new Error('Call to undefined method '.__CLASS__."::{$name}()");
+            throw new \Error('Call to undefined method '.__CLASS__."::{$name}()");
         }
         $name = lcfirst(substr($name, 3));
 
